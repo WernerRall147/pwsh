@@ -15,6 +15,7 @@ function Get-AzureADBitLockerKeysForUser {
       author: Gerbrand van der Weg
       blog: https://pwsh.nl
       created: 2018-10-26
+      Access token code courtesy of Jos Lieben: https://www.lieben.nu/liebensraum/2018/07/retrieving-a-headless-silent-token-for-main-iam-ad-ext-azure-com-using-powershell/
     #>
 
     Param 
@@ -33,19 +34,21 @@ function Get-AzureADBitLockerKeysForUser {
 
     if ($Credential) {
         Try {
-            Connect-AzureAD -Credential $Credential | Out-Null
+            Connect-AzureAD -Credential $Credential -ErrorAction Stop | Out-Null
         } Catch {
-            Connect-AzureAD -TenantId $(($Credential.UserName.Split("@"))[1]) | Out-Null
+            Write-Warning "Couldn't connect to Azure AD non-interactively, trying interactively."
+            Connect-AzureAD -TenantId $(($Credential.UserName.Split("@"))[1]) -ErrorAction Stop | Out-Null
         }
     
         Try {
             Login-AzureRmAccount -Credential $Credential -ErrorAction Stop | Out-Null
         } Catch {
-            Login-AzureRmAccount -TenantId $(($Credential.UserName.Split("@"))[1]) | Out-Null
+            Write-Warning "Couldn't connect to Azure RM non-interactively, trying interactively."
+            Login-AzureRmAccount -TenantId $(($Credential.UserName.Split("@"))[1]) -ErrorAction Stop | Out-Null
         }
     } else {
-        Connect-AzureAD | Out-Null
-        Login-AzureRmAccount | Out-Null
+        Connect-AzureAD -ErrorAction Stop | Out-Null
+        Login-AzureRmAccount -ErrorAction Stop | Out-Null
     }
 
     $context = Get-AzureRmContext
